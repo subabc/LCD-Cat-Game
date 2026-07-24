@@ -26,7 +26,13 @@ byte catman[8] = {
   B10001
 };
 
-int charPos = 0; //start position 
+const int button = 2; //pin connected to 2 on board 
+
+int charPos = 1; //start position at the bottom row --> top row == 0
+
+bool didJump = false; //default to bottom row when button is not pressed 
+unsigned long jumpStartTime; //storing the exact time the character jumps
+const int jumpTime = 400; //jump duration 
 
 void setup() {
   lcd.init();
@@ -34,24 +40,63 @@ void setup() {
 
   lcd.createChar(0, catman);
 
-  lcd.clear();
+  pinMode(button, INPUT_PULLUP); //INTPUT_PULLUP is the resistor that changes the voltage to determine high/low voltage movement on board 
+  //high resistance = slows current --> no movement, low resistance = increases current --> movement
+  
+  lcd.setCursor(0, charPos); //initilise character to bottom row
+
+  lcd.write(byte(0)); //prints the character out at position 0
+  // lcd.clear();//clear old data when program is initilised
 }
 
 void loop() {
-  lcd.clear(); //need to clear screen to change character position 
+  // lcd.clear(); //need to clear screen to change character position 
 
-  lcd.setCursor(charPos, 0);
-  lcd.write(byte(0));
+  if (digitalRead(button) == LOW && !didJump){ //if button is pressed then
+    didJump = true;
+    jumpStartTime = millis(); // save start time to compare it to when player stops pressing button
 
-  charPos++;//increment character by one space
+    lcd.setCursor(0, charPos); //erase the character at it's current position
+    lcd.print(" ");
 
-  if (charPos > 15){
-    charPos = 0; // set character back to starting pos if it goes to the end of the display
+    charPos = 0; // move char to the top row
+
+    lcd.setCursor(0, charPos);//print char
+    lcd.write(byte(0));
+
+
+
+
+  }// do not need to include else if as player can spam the button so the char stays on the top row to avoid obstacles
+
+  if (didJump && millis() - jumpStartTime > jumpTime){
+    //if the char did not jump and the (duration of the jump - start jump time) > jump time, then the current is high, which means that the jump is over 
+    // therefore, clear position 
+      lcd.setCursor(0, charPos);
+      lcd.print(" ");
+
+      charPos = 1; // put character back to bottom row
+      lcd.setCursor(0, charPos);
+      lcd.write(byte(0));
+
+      didJump = false; // initilise jump condition again 
+
 
 
   }
 
-  delay(300);
+  // lcd.setCursor(charPos, 0);
+  // lcd.write(byte(0));
+
+  // charPos++;//increment character by one space
+
+  // if (charPos > 15){
+  //   charPos = 0; // set character back to starting pos if it goes to the end of the display
+
+
+  // }
+
+  // delay(300);
 
 
 
