@@ -26,26 +26,47 @@ byte catman[8] = {
   B10001
 };
 
+byte obstacle[8] = {
+  B00100,
+  B01110,
+  B01110,
+  B11111,
+  B11111,
+  B01110,
+  B01110,
+  B00100
+};
+
 const int button = 2; //pin connected to 2 on board 
 
 int charPos = 1; //start position at the bottom row --> top row == 0
+int obsPos = 15; //place at the end of the screen 
 
 bool didJump = false; //default to bottom row when button is not pressed 
+
 unsigned long jumpStartTime; //storing the exact time the character jumps
 const int jumpTime = 400; //jump duration 
+
+unsigned long lastMoveTime = 0;
+const int obsSpeed = 300;
 
 void setup() {
   lcd.init();
   lcd.backlight();
 
-  lcd.createChar(0, catman);
+  lcd.createChar(0, catman);//initilise sprites in memory
+  lcd.createChar(1, obstacle); 
 
   pinMode(button, INPUT_PULLUP); //INTPUT_PULLUP is the resistor that changes the voltage to determine high/low voltage movement on board 
   //high resistance = slows current --> no movement, low resistance = increases current --> movement
   
   lcd.setCursor(0, charPos); //initilise character to bottom row
-
   lcd.write(byte(0)); //prints the character out at position 0
+
+
+  lcd.setCursor(obsPos, 1);
+  lcd.write(byte(1));
+
   // lcd.clear();//clear old data when program is initilised
 }
 
@@ -83,6 +104,23 @@ void loop() {
 
 
 
+  }
+
+
+  if (millis() - lastMoveTime > obsSpeed){
+    lastMoveTime = millis();
+
+      lcd.setCursor(obsPos, 1); //clear current position of obstacle on the bottom row
+      lcd.print(" ");
+
+      obsPos--; //decrement position of obstacle --> move to the left
+
+      if (obsPos < 0){//ensure that the obstacle doesn't leave the screen 
+        obsPos = 15; //take it back to beginning position
+      }
+
+      lcd.setCursor(obsPos, 1);//print it out to new position
+      lcd.write(byte(1));
   }
 
   // lcd.setCursor(charPos, 0);
